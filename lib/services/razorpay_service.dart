@@ -4,43 +4,69 @@ import 'dart:convert';
 class RazorPayService {
   static const String _baseUrl = 'https://karatly-backhand.onrender.com';
 
-  Future<String?> createOrder(double totalCost) async {
-    try{
-      final response  = await http.post(
-    Uri.parse('$_baseUrl/create-order'),
-        headers: {'Content-type' : 'application/json'},
+  // ✅ FIXED: Complete createOrder method with proper response handling
+  Future<Map<String, dynamic>?> createOrder(double totalCost) async {
+    try {
+      print('Creating order for amount: ₹$totalCost');
+
+      final response = await http.post(
+        Uri.parse('$_baseUrl/create-order'),
+        headers: {'Content-Type': 'application/json'}, // ✅ Fixed typo
         body: jsonEncode({'totalCost': totalCost}),
-    );
+      ).timeout(Duration(seconds: 15)); // ✅ Added timeout
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['orderId'];
+        // ✅ Fixed: Return complete response, not just orderId
+        if (data['success'] == true) {
+          return {
+            'orderId': data['orderId'],
+            'amount': data['amount'],
+            'currency': data['currency'],
+            'key_id': data['key_id'],
+          };
+        } else {
+          print('Backend error: ${data['message']}');
+          return null;
+        }
+      } else {
+        print('HTTP Error ${response.statusCode}: ${response.body}');
+        return null;
       }
-      else{
-       print('Error creating order: ${response.body}');
-       return null;
-      }
-    }
-    catch (e) {
+    } catch (e) {
       print('Exception creating order: $e');
       return null;
     }
   }
 
-  Future<bool> verifyPayment(String orderId, String paaymentId, String signature) async {
+  // ✅ FIXED: Corrected method with proper endpoint and parameters
+  Future<bool> verifyPayment(String orderId, String paymentId, String signature) async {
     try {
-      final resposnse = await http.post(
-        Uri.parse('$_baseUrl/verify-signature'),
+      print('Verifying payment: OrderID=$orderId, PaymentID=$paymentId');
+
+      final response = await http.post(
+        Uri.parse('$_baseUrl/verify-payment'), // ✅ Fixed endpoint name
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'order_id': orderId,
-          'payment_id': paaymentId,
-          'razopay_signature': signature,
+          'payment_id': paymentId, // ✅ Fixed typo
+          'razorpay_signature': signature, // ✅ Fixed typo
         }),
-      );
-      return resposnse.statusCode == 200;
-    }
-    catch(e){
+      ).timeout(Duration(seconds: 10));
+
+      print('Verification response: ${response.statusCode} - ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['success'] == true;
+      } else {
+        print('Verification failed: ${response.body}');
+        return false;
+      }
+    } catch (e) {
       print('Exception verifying payment: $e');
       return false;
     }
