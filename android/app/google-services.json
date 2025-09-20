@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "640584972417",
+    "project_id": "karatly",
+    "storage_bucket": "karatly.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:640584972417:android:514bdf132eb4563147b580",
+        "android_client_info": {
+          "package_name": "com.example.karatly"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBuREf-s0_OcuZdHCV91dxX47qr7FDpP_M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
