@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:karatly/models/priceModel.dart';
 import 'package:karatly/models/purchaseModel.dart';
 import 'package:karatly/services/cloudFirestore_service.dart';
+import 'package:karatly/services/razorpay_service.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 class BuyScreen extends StatefulWidget {
   final GoldPrice? priceData;
@@ -15,6 +17,11 @@ class BuyScreen extends StatefulWidget {
 
 class _BuyScreenState extends State<BuyScreen> {
   final FirestoreService _firestoreService = FirestoreService();
+  final RazorPayService _razorPayService = RazorPayService();
+  late Razorpay _razorpay;
+
+  GoldPurchase? _pendingPurchase;
+
   String _selectedOption = 'rupee';
   String gramText = '';
   String rupeeText = '';
@@ -29,6 +36,10 @@ class _BuyScreenState extends State<BuyScreen> {
     super.initState();
     _rupeeContoller = TextEditingController();
     _gramController = TextEditingController();
+
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
 
     _rupeeContoller.addListener(() {
       if (_selectedOption == 'rupee' && !_isTypingGram) {
@@ -71,7 +82,78 @@ class _BuyScreenState extends State<BuyScreen> {
   void dispose() {
     _rupeeContoller.dispose();
     _gramController.dispose();
+    _razorpay.clear();
     super.dispose();
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+    print('Payment Successful, Verifying with backhand...');
+    print('Order Id: ${response.orderId}');
+    print('Payment Id:${response.paymentId}');
+
+    bool isVerified = await _razorPayService.verifyPayment(
+        response.orderId!,
+        response.paymentId!,
+        response.signature!,
+    );
+
+    if(isVerified && _pendingPurchase != null) {
+      print('Payment signature verified. Saving purchase to Firestore');
+
+      await _firestoreService.addPurchase(_pendingPurchase!);
+
+      _rupeeContoller.clear();
+      _gramController.clear();
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+       SnackBar(content: Text('Gold Purchased Successfully.')),
+      );
+      
+      Navigator.pop(context);
+
+      Navigator.pop(context);
+    }
+
+    else{
+      print('Payment verification failed');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Payment verification failed. Please contact support.')),
+      );
+    }
+  }
+
+  void _handlePaymentError(PaymentFailureResponse response) {
+    print('Payment Error: ${response.code} - ${response.message}');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Payment Failed: ${response.message}')),
+    );
+  }
+
+  void _startRazorpayPayment(double totalCost, GoldPurchase purchase) async {
+    _pendingPurchase = purchase;
+
+    final orderId = await _razorPayService.createOrder(totalCost);
+
+    if(orderId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to create payment order. Please try again.')),
+      );
+      return;
+    }
+
+    final options = {
+      'key': 'rzp_test_ryW0AG51bDcWZc',
+      'amount': (totalCost * 100).toInt(),
+      'name': 'Karatly Digital Gold',
+      'order_id': orderId,
+      'description': '${purchase.grams.toStringAsFixed(2)}g of Digital Gold',
+      'prefill': {
+        'contact': '9099001051',
+        'email': 'customerhelp@karatly.com'
+      }
+    };
+
+    _razorpay.open(options);
   }
 
   @override
@@ -460,6 +542,8 @@ class _BuyScreenState extends State<BuyScreen> {
                                             totalCost: totalPrice, // calculated total including tax
                                             purchaseDate: DateTime.now(),
                                           );
+                                          
+                                          _startRazorpayPayment(totalPrice, newPurchase);
 
                                           // Save to Firestore
                                           await _firestoreService.addPurchase(newPurchase);
