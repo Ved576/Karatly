@@ -2,7 +2,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class RazorPayService {
-  static const String _baseUrl = '192.168.1.84';
+  static const String _baseUrl = 'https://karatly-backhand.onrender.com';
 
   Future<String?> createOrder(double totalCost) async {
     try{
