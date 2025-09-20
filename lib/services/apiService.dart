@@ -10,6 +10,7 @@ class GoldApiService {
 
   Future<GoldPrice> fetchGoldPrice() async {
 
+
     final goldApiUrl =
         'https://api.polygon.io/v2/aggs/ticker/C:XAUUSD/prev?adjusted=true&apiKey=$apiKey';
     final currencyApiUrl =
@@ -40,6 +41,8 @@ class GoldApiService {
         unit: 'gram',
         lastUpdated: DateTime.now(),
       );
+
+
     } else {
       throw Exception('Price data not found in API response.');
     }
@@ -103,4 +106,3 @@ class GoldApiService {
     }
   }
 }
-

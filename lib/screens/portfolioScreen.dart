@@ -293,7 +293,7 @@ class PortfolioScreen extends StatelessWidget {
                         Navigator.push(context, MaterialPageRoute(builder: (context) => SellScreen(priceData: priceData)));
                       },
                       style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(horizontal: 60),
+                        padding: EdgeInsets.symmetric(horizontal: 55),
                         backgroundColor: Colors.grey[900],
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -304,7 +304,7 @@ class PortfolioScreen extends StatelessWidget {
                     ElevatedButton(
                       onPressed: onNavigatetoBuy,
                       style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(horizontal: 60),
+                        padding: EdgeInsets.symmetric(horizontal: 55),
                         backgroundColor: Colors.grey[900],
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),

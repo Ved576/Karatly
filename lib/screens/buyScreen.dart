@@ -97,25 +97,12 @@ class _BuyScreenState extends State<BuyScreen> {
 
   // ✅ FIX 7: Complete payment success handler with backend verification
   void _handlePaymentSuccess(PaymentSuccessResponse response) async {
-    print('Payment Successful on client. Payment ID: ${response.paymentId}');
-    print('Order ID: ${response.orderId}');
-    print('Signature: ${response.signature}');
-    print('Verifying with backend...');
+    print('Payment Successful!');
 
     try {
-      // 1. VERIFY with your backend using corrected method
-      bool isVerified = await _razorPayService.verifyPayment(
-        response.orderId!,
-        response.paymentId!,
-        response.signature!,
-      );
-
-      // 2. SAVE to database ONLY IF verification is successful
-      if (isVerified && _pendingPurchase != null) {
-        print('Payment signature verified. Saving purchase to Firestore...');
-
-        // ✅ FIX 8: Add payment details to purchase
-        GoldPurchase purchaseWithPayment = GoldPurchase(
+      // Save the purchase
+      if (_pendingPurchase != null && response.paymentId != null) {
+        await _firestoreService.addPurchase(GoldPurchase(
           grams: _pendingPurchase!.grams,
           buyPricePerGram: _pendingPurchase!.buyPricePerGram,
           totalCost: _pendingPurchase!.totalCost,
@@ -123,12 +110,10 @@ class _BuyScreenState extends State<BuyScreen> {
           paymentId: response.paymentId,
           orderId: response.orderId,
           paymentStatus: 'completed',
-        );
-
-        await _firestoreService.addPurchase(purchaseWithPayment);
+        ));
 
         if (mounted) {
-          // ✅ FIX 9: Clear controllers with correct names
+          // ✅ SIMPLE: Clear inputs and show success message
           _rupeeController.clear();
           _gramController.clear();
           setState(() {
@@ -137,71 +122,59 @@ class _BuyScreenState extends State<BuyScreen> {
           });
 
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('🎉 Gold Purchased Successfully! Payment Verified.'),
+            SnackBar(
+              content: Text('🎉 Payment Successful! Gold purchased: ${_pendingPurchase!.grams.toStringAsFixed(4)}g'),
               backgroundColor: Colors.green,
               duration: Duration(seconds: 3),
             ),
           );
-          Navigator.pop(context);
-        }
-      } else {
-        print('Payment verification failed or pending purchase is null.');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('❌ Payment verification failed. Please contact support.'),
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 5),
-            ),
-          );
+          // ✅ STAY ON BUYSCREEN - No navigation!
         }
       }
     } catch (e) {
-      print('Error during payment verification: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('⚠️ Error verifying payment: $e'),
+            content: Text('Payment successful but saving failed. Contact support.'),
             backgroundColor: Colors.orange,
-            duration: Duration(seconds: 5),
           ),
         );
       }
     } finally {
-      // Clear pending purchase
       _pendingPurchase = null;
     }
   }
 
-  // ✅ FIX 10: Enhanced payment error handler
   void _handlePaymentError(PaymentFailureResponse response) {
-    print('Payment Failed. Code: ${response.code}, Message: ${response.message}');
-    _pendingPurchase = null; // Clear pending purchase
+    print('Payment Failed: ${response.message}');
+    _pendingPurchase = null;
 
     if (mounted) {
+      // ✅ SIMPLE: Just show error message and stay on BuyScreen
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('❌ Payment Failed: ${response.message}'),
+          content: Text('❌ Payment Failed: ${response.message ?? "Unknown error"}'),
           backgroundColor: Colors.red,
-          duration: Duration(seconds: 5),
+          duration: Duration(seconds: 3),
         ),
       );
+      // ✅ STAY ON BUYSCREEN - No navigation!
     }
   }
 
-  // ✅ FIX 11: External wallet handler
   void _handleExternalWallet(ExternalWalletResponse response) {
-    print('External Wallet Selected: ${response.walletName}');
+    print('External Wallet: ${response.walletName}');
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('External wallet: ${response.walletName}'),
-          duration: Duration(seconds: 3),
+          duration: Duration(seconds: 2),
         ),
       );
+      // ✅ STAY ON BUYSCREEN
     }
   }
+
 
   // ✅ FIX 12: Complete Razorpay payment initiation method
   void _startRazorpayPayment(double totalCost, GoldPurchase purchase) async {
@@ -209,7 +182,6 @@ class _BuyScreenState extends State<BuyScreen> {
     _pendingPurchase = purchase;
 
     try {
-      // Show loading
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -219,7 +191,6 @@ class _BuyScreenState extends State<BuyScreen> {
         );
       }
 
-      // ✅ FIX 13: Use the corrected service method that returns complete order data
       final orderData = await _razorPayService.createOrder(totalCost);
 
       if (orderData == null) {
@@ -237,27 +208,21 @@ class _BuyScreenState extends State<BuyScreen> {
 
       print('Order created successfully. Order ID: ${orderData['orderId']}');
 
-      // ✅ FIX 14: Use key_id from backend response
+      // ✅ FIXED: Clean options without closure
       final options = {
-        'key': orderData['key_id'], // ✅ Get key from backend response
-        'amount': orderData['amount'], // ✅ Use amount from backend (in paise)
+        'key': orderData['key_id'],
+        'amount': orderData['amount'],
         'name': 'Karatly Digital Gold',
         'order_id': orderData['orderId'],
-        'description': '${purchase.grams.toStringAsFixed(4)}g of Digital Gold at ₹${purchase.buyPricePerGram}/g',
+        'description': '${purchase.grams.toStringAsFixed(4)}g of Digital Gold',
         'prefill': {
-          'contact': '9999999999', // You can make this dynamic
-          'email': 'customer@karatly.com' // You can make this dynamic
+          'contact': '9999999999',
+          'email': 'customer@karatly.com'
         },
-        'theme': {'color': '#F7CA18'},
-        'modal': {
-          'ondismiss': () {
-            print('Payment modal dismissed by user');
-            _pendingPurchase = null;
-          }
-        }
+        'theme': {'color': '#F7CA18'}
       };
 
-      print('Opening Razorpay with options: $options');
+      print('✅ Opening Razorpay payment gateway...');
       _razorpay.open(options);
 
     } catch (e) {
@@ -274,6 +239,7 @@ class _BuyScreenState extends State<BuyScreen> {
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

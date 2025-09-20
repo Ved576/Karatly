@@ -71,6 +71,7 @@ class _PriceTrackerScreenState extends State<MainScreen> {
     }
   }
 
+
   Future<void> fetchChartData() async {
     setState(() {
       _isLoadingChart = true;
@@ -138,7 +139,7 @@ class _PriceTrackerScreenState extends State<MainScreen> {
             Container(height: 30,width: 2,color: Colors.grey[600]),
             SizedBox(width: 5),
             Text('Karatly', style: TextStyle(
-              fontWeight: FontWeight.bold
+                fontWeight: FontWeight.bold
             ),),
           ],
         ),
@@ -156,9 +157,9 @@ class _PriceTrackerScreenState extends State<MainScreen> {
               isLoading: isLoading,
               errorMessage: errorMessage,
             ),
-        
+
             SizedBox(height: 20),
-        
+
             Padding(
               padding: const EdgeInsets.all(30.0),
               child: ChartSection(
@@ -170,9 +171,9 @@ class _PriceTrackerScreenState extends State<MainScreen> {
                 percentageChange: _percentageChange,
               ),
             ),
-            
+
             SizedBox(height: 20),
-        
+
             ElevatedButton(
               onPressed: () {
                 if(widget.onNavigatetoBuy!=null){
@@ -180,13 +181,13 @@ class _PriceTrackerScreenState extends State<MainScreen> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 1), // Remove the default padding
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12), // Set the border radius
-                ),
-                backgroundColor: Colors.transparent, // Make the button transparent
-                shadowColor: Colors.transparent, // Make the shadow transparent
-                overlayColor: Colors.yellow[500]
+                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 1), // Remove the default padding
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12), // Set the border radius
+                  ),
+                  backgroundColor: Colors.transparent, // Make the button transparent
+                  shadowColor: Colors.transparent, // Make the shadow transparent
+                  overlayColor: Colors.yellow[500]
               ),
               child: Ink(
                 decoration: BoxDecoration(
@@ -205,8 +206,8 @@ class _PriceTrackerScreenState extends State<MainScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Image.asset('assets/bg_gold.png', height: 40,width: 50),
-                       SizedBox(width: 15),
-                       Text(
+                      SizedBox(width: 15),
+                      Text(
                         'BUY GOLD',
                         style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.w900),
                       ),
