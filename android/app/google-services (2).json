@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "640584972417",
+    "project_id": "karatly",
+    "storage_bucket": "karatly.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:640584972417:android:514bdf132eb4563147b580",
+        "android_client_info": {
+          "package_name": "com.example.karatly"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "640584972417-anh8mbt2tu2grcr92pl0tc0j0ddr40r7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.karatly",
+            "certificate_hash": "28a4e55f23d03ed56ccb88e810b8a70125d3a407"
+          }
+        },
+        {
+          "client_id": "640584972417-8t649o4j3adgv94sudfvmr9o44keg0o9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBuREf-s0_OcuZdHCV91dxX47qr7FDpP_M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "640584972417-8t649o4j3adgv94sudfvmr9o44keg0o9.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "640584972417-qs0l8it6kaq6jmlmtm5ecntodk1v1hpq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.karatly"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
