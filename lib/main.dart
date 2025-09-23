@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:karatly/models/priceModel.dart';
+import 'package:karatly/screens/loginScreen.dart';
 import 'package:karatly/services/apiService.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Added for auth state checking
 
 // Import all the screens for the navigation bar.
 import 'screens/mainScreen.dart';
@@ -10,7 +12,7 @@ import 'screens/buyScreen.dart';
 import 'screens/portfolioScreen.dart';
 import 'screens/settingScreen.dart';
 
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -41,10 +43,46 @@ class MyApp extends StatelessWidget {
           backgroundColor: const Color(0xFF1E1E1E),
           selectedItemColor: Colors.yellow.shade700,
           unselectedItemColor: Colors.white54,
-          type: BottomNavigationBarType.fixed, // Ensures all labels are visible
+          type: BottomNavigationBarType.fixed,
         ),
       ),
-      home: const AppHome(),
+      // ✅ Use AuthWrapper to check authentication state
+      home: const AuthWrapper(),
+      routes: {
+        '/home': (context) => const AppHome(),
+        '/main': (context) => MainScreen(onNavigatetoBuy: () {}),
+        '/login': (context) => LoginScreen(onNavigateToBuy: (){}),
+      },
+    );
+  }
+}
+
+// ✅ Added AuthWrapper to handle authentication state
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        // Show loading while checking auth state
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        // If user is logged in, go to main app
+        if (snapshot.hasData && snapshot.data != null) {
+          return const AppHome();
+        }
+
+        // If user is not logged in, show login screen
+        return LoginScreen(onNavigateToBuy: (){});
+      },
     );
   }
 }
@@ -106,10 +144,10 @@ class _AppHomeState extends State<AppHome> {
     // The list of screens is now built inside the build method so it can
     // access the latest state (_goldPrice).
     final List<Widget> screens = <Widget>[
-      MainScreen(onNavigatetoBuy: () => _onItemTapped(1),),
+      MainScreen(onNavigatetoBuy: () => _onItemTapped(1)),
       BuyScreen(priceData: _goldPrice),
       PortfolioScreen(
-      priceData: _goldPrice,
+        priceData: _goldPrice,
         onNavigatetoBuy: () => _onItemTapped(1),
       ),
       const Settings(),
@@ -143,4 +181,3 @@ class _AppHomeState extends State<AppHome> {
     );
   }
 }
-
